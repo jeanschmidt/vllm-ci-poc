@@ -1,0 +1,58 @@
+name: PR Label Check and Tag
+
+on:
+  pull_request:
+
+jobs:
+  check-and-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GitHub App Token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          fetch-depth: 0
+
+      - name: Check for Ready label and create tag
+        env:
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        run: |
+          # Check if PR has "Ready" label
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          REPO="${{ github.repository }}"
+
+          # Get PR labels
+          LABELS=$(gh pr view $PR_NUMBER --json labels --jq '.labels[].name')
+
+          # Check if "Ready" label exists
+          if echo "$LABELS" | grep -q "^Ready$"; then
+            echo "Ready label found, creating tag..."
+
+            # Get the latest commit SHA
+            COMMIT_SHA="${{ github.event.pull_request.head.sha }}"
+
+            # Generate timestamp in YYDDMMhhmmss format
+            TIMESTAMP=$(date -u +"%y%d%m%H%M%S")
+
+            # Create tag name
+            TAG_NAME="ciflow/ready/$TIMESTAMP"
+
+            # Configure git
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+
+            # Create and push tag
+            git tag -a "$TAG_NAME" "$COMMIT_SHA" -m "Auto-tagged by PR label check workflow"
+            git push origin "$TAG_NAME"
+
+            echo "Tag $TAG_NAME created for commit $COMMIT_SHA"
+          else
+            echo "Ready label not found, skipping tag creation"
+          fi
