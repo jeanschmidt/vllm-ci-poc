@@ -11,6 +11,9 @@ on:
 jobs:
   check-and-tag:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
     steps:
     #   - name: Generate GitHub App Token
     #     id: generate-token
