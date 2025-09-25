@@ -1,0 +1,31 @@
+name: Enforce Ready Label
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+jobs:
+  check-ready-label:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - name: Check for Ready label
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Get PR number
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+
+          # Get PR labels
+          LABELS=$(gh pr view $PR_NUMBER --repo ${{ github.repository }} --json labels --jq '.labels[].name')
+
+          # Check if "Ready" label exists
+          if echo "$LABELS" | grep -q "^Ready$"; then
+            echo "✅ Ready label found - PR can be merged"
+            exit 0
+          else
+            echo "❌ Ready label not found - PR cannot be merged"
+            echo "Please add the 'Ready' label to this PR when it's ready for review"
+            exit 1
+          fi
