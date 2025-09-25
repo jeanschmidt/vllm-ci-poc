@@ -48,11 +48,8 @@ jobs:
             # Get the latest commit SHA
             COMMIT_SHA="${{ github.event.pull_request.head.sha }}"
 
-            # Generate timestamp in YYDDMMhhmmss format
-            TIMESTAMP=$(date -u +"%y%d%m%H%M%S")
-
-            # Create tag name
-            TAG_NAME="ciflow/ready/$TIMESTAMP"
+            # Create tag name with PR number
+            TAG_NAME="ciflow/ready/$PR_NUMBER"
 
             # Configure git
             git config user.name "github-actions[bot]"
