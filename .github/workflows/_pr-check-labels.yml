@@ -2,10 +2,18 @@ name: PR Label Check and Tag
 
 on:
   pull_request:
+    types:
+      - labeled
+      - opened
+      - synchronize
+      - reopened
 
 jobs:
   check-and-tag:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
     steps:
     #   - name: Generate GitHub App Token
     #     id: generate-token
@@ -17,12 +25,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          token: ${{ steps.generate-token.outputs.token }}
+          # token: ${{ steps.generate-token.outputs.token }}
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Check for Ready label and create tag
         env:
-          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          GH_TOKEN: ${{ github.token }}
+          # GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: |
           # Check if PR has "Ready" label
           PR_NUMBER="${{ github.event.pull_request.number }}"
@@ -38,18 +48,15 @@ jobs:
             # Get the latest commit SHA
             COMMIT_SHA="${{ github.event.pull_request.head.sha }}"
 
-            # Generate timestamp in YYDDMMhhmmss format
-            TIMESTAMP=$(date -u +"%y%d%m%H%M%S")
-
-            # Create tag name
-            TAG_NAME="ciflow/ready/$TIMESTAMP"
+            # Create tag name with PR number
+            TAG_NAME="ciflow/ready/$PR_NUMBER"
 
             # Configure git
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
 
             # Create and push tag
-            git tag -a "$TAG_NAME" "$COMMIT_SHA" -m "Auto-tagged by PR label check workflow"
+            git tag -a "$TAG_NAME" -m "Auto-tagged by PR label check workflow"
             git push origin "$TAG_NAME"
 
             echo "Tag $TAG_NAME created for commit $COMMIT_SHA"

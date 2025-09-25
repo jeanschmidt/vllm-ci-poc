@@ -1,0 +1,10 @@
+name: CI Flow Ready Tests
+
+on:
+  push:
+    tags:
+      - 'ciflow/ready/*'
+
+jobs:
+  full-tests:
+    uses: ./.github/workflows/full_test.yml
