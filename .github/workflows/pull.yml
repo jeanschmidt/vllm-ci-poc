@@ -5,6 +5,4 @@ on:
 
 jobs:
   fast-tests:
-    uses: ./.github/workflows/simple_test.yml
-    with:
-      fast_only: true
+    uses: ./.github/workflows/fast_test.yml
