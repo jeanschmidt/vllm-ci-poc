@@ -21,8 +21,9 @@ jobs:
           fetch-depth: 1
 
       - name: Check for Ready label and create tag
-        # env:
-        #   GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: |
           # Check if PR has "Ready" label
           PR_NUMBER="${{ github.event.pull_request.number }}"
